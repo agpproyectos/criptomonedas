@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Crypto Blast 400 — Oferta y Demanda de Criptomonedas</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at 15% 10%, #111c44 0%, #070b19 55%, #04060e 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .glass {
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+    }
+    .neon-border {
+      box-shadow: 0 0 24px rgba(6, 182, 212, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+    canvas {
+      touch-action: manipulation;
+      user-select: none;
+    }
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+    .custom-scroll::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.35); border-radius: 9999px; }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.35); }
+      50% { box-shadow: 0 0 18px 2px rgba(6, 182, 212, 0.45); }
+    }
+    .pulse-glow { animation: pulseGlow 2.2s infinite; }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen">
+  <!-- Header HUD -->
+  <header class="glass sticky top-0 z-30 border-b border-slate-800/80 px-3 py-2.5 sm:px-6">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-2 flex-wrap">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 via-orange-500 to-cyan-500 flex items-center justify-center font-black text-slate-950 text-lg shadow-lg">₿</div>
+        <div>
+          <h1 class="text-sm sm:text-base font-extrabold tracking-tight leading-none flex items-center gap-1.5">
+            <span>CRYPTO BLAST</span>
+            <span class="px-1.5 py-0.5 text-[10px] font-black rounded bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">400</span>
+          </h1>
+          <p id="worldLabel" class="text-[11px] text-slate-400 leading-tight mt-0.5">Mundo 1 · Fundamentos</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <div class="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-700/70 text-xs">
+          <span class="text-amber-400">★</span>
+          <span id="totalStarsLabel" class="font-bold">0</span>
+          <span class="text-slate-500">/ 1200</span>
+        </div>
+        <button id="btnMap" class="px-2.5 py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 text-xs font-semibold transition flex items-center gap-1">
+          <span>🗺️</span><span class="hidden sm:inline">400 Niveles</span><span class="sm:hidden">Niveles</span>
+        </button>
+        <button id="btnGuide" class="px-2.5 py-1.5 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition flex items-center gap-1">
+          <span>📚</span><span class="hidden sm:inline">Guía 2026</span>
+        </button>
+        <button id="btnSound" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition" title="Activar/Silenciar audio">
+          🔊
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Game Container -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-3 py-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+    <!-- Left Column: Board & Controls -->
+    <section class="lg:col-span-7 flex flex-col gap-3">
+      <!-- Top Level Bar -->
+      <div class="glass neon-border rounded-2xl p-3 flex items-center justify-between gap-2 flex-wrap">
+        <div class="flex items-center gap-2.5">
+          <button id="btnPrevLevel" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm border border-slate-700 transition" title="Nivel anterior">◀</button>
+          <div>
+            <div class="flex items-center gap-2">
+              <span id="levelBadge" class="text-base sm:text-lg font-black text-white">Nivel 1</span>
+              <span id="difficultyBadge" class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Normal</span>
+            </div>
+            <p id="levelSubtitle" class="text-xs text-slate-400">Escasez y Demanda</p>
+          </div>
+          <button id="btnNextLevel" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm border border-slate-700 transition" title="Nivel siguiente">▶</button>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="text-center px-3 py-1 rounded-xl bg-slate-900/90 border border-slate-700/80">
+            <div class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Movimientos</div>
+            <div id="movesDisplay" class="text-lg font-black text-cyan-300 leading-tight">18</div>
+          </div>
+          <div class="text-center px-3 py-1 rounded-xl bg-slate-900/90 border border-slate-700/80">
+            <div class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Puntos</div>
+            <div id="scoreDisplay" class="text-lg font-black text-amber-300 leading-tight">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canvas Wrapper -->
+      <div class="glass neon-border rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-center relative">
+        <div id="boardContainer" class="w-full max-w-[520px] aspect-square relative flex items-center justify-center">
+          <canvas id="gameCanvas" class="w-full h-full rounded-xl cursor-pointer"></canvas>
+        </div>
+
+        <!-- Bottom Action Bar -->
+        <div class="w-full max-w-[520px] mt-3 flex items-center justify-between gap-2 flex-wrap">
+          <div class="text-[11px] text-slate-400 flex items-center gap-1.5">
+            <span class="inline-block w-2 h-2 rounded-full bg-cyan-400"></span>
+            <span id="ruleHint">Toca grupos de 2+ fichas iguales. ¡4+ crea un Rayo Halving!</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button id="btnHint" class="px-2.5 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-semibold transition">
+              💡 Pista
+            </button>
+            <button id="btnShuffle" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition">
+              🔀 Mezclar
+            </button>
+            <button id="btnRestart" class="px-2.5 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-semibold transition">
+              ↺ Reiniciar
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Objectives, Market Simulator & Educational Context -->
+    <aside class="lg:col-span-5 flex flex-col gap-3">
+      <!-- Objectives Card -->
+      <div class="glass neon-border rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-2.5">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <span>🎯</span> Objetivos del Nivel
+          </h2>
+          <span id="minGroupBadge" class="text-[11px] font-semibold text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">Mín. 2 iguales</span>
+        </div>
+        <div id="objectivesList" class="grid grid-cols-2 gap-2"></div>
+        <div class="mt-3 pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+          <span class="text-xs text-slate-400">¿Necesitas +3 movimientos?</span>
+          <button id="btnBonusQuiz" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition">
+            ⚡ Reto Bonus (+3 Mov)
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Market Telemetry -->
+      <div class="glass neon-border rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <span>📈</span> Simulador de Mercado 2026
+          </h2>
+          <span id="marketStateTag" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">Equilibrio</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5 mb-3">
+          <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+            <div class="text-[10px] text-slate-400 uppercase font-semibold">Precio Simulado BTC</div>
+            <div id="simPrice" class="text-base sm:text-lg font-black text-white mt-0.5">$67,420</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+            <div class="text-[10px] text-slate-400 uppercase font-semibold">Fear & Greed</div>
+            <div id="simFng" class="text-base sm:text-lg font-black text-amber-300 mt-0.5">50 · Neutral</div>
+          </div>
+        </div>
+        <div class="w-full h-2.5 rounded-full bg-slate-900 overflow-hidden border border-slate-800">
+          <div id="fngBar" class="h-full transition-all duration-300 bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400" style="width: 50%"></div>
+        </div>
+        <div class="flex justify-between text-[10px] text-slate-500 mt-1 font-medium">
+          <span>0 Miedo Extremo</span>
+          <span>50 Neutral</span>
+          <span>100 Codicia</span>
+        </div>
+      </div>
+
+      <!-- Educational Capsule -->
+      <div class="glass neon-border rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-1.5">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-cyan-300 flex items-center gap-1.5">
+            <span>💡</span> Cápsula Fintech del Nivel
+          </h2>
+          <span id="capsuleModule" class="text-[10px] font-semibold text-slate-400">Módulo 1</span>
+        </div>
+        <p id="capsuleText" class="text-xs sm:text-sm text-slate-200 leading-relaxed"></p>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-slate-900/95 border border-cyan-400/40 text-xs sm:text-sm font-semibold text-cyan-200 shadow-2xl opacity-0 pointer-events-none transition-opacity duration-200"></div>
+
+  <!-- Quiz / Reto Fintech Modal -->
+  <div id="quizModal" class="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4">
+    <div class="glass neon-border rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-3">
+        <span id="quizBadge" class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Reto de Validación</span>
+        <span id="quizLevelTag" class="text-xs font-semibold text-slate-400">Nivel 1</span>
+      </div>
+      <h3 id="quizQuestion" class="text-base sm:text-lg font-extrabold text-white leading-snug mb-4"></h3>
+      <div id="quizOptions" class="flex flex-col gap-2"></div>
+      <div id="quizFeedback" class="hidden mt-4 p-3 rounded-xl text-xs sm:text-sm leading-relaxed"></div>
+      <div id="quizActions" class="hidden mt-4 flex justify-end gap-2">
+        <button id="btnQuizContinue" class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg transition">
+          Continuar ▶
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Over / Out of Moves Modal -->
+  <div id="loseModal" class="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass neon-border rounded-2xl max-w-sm w-full p-6 text-center">
+      <div class="text-4xl mb-2">📉</div>
+      <h3 class="text-xl font-black text-white mb-1">¡Mercado Sin Liquidez!</h3>
+      <p class="text-xs sm:text-sm text-slate-300 mb-5">Se agotaron los movimientos antes de equilibrar este nivel. Ajusta tu estrategia y vuelve a intentarlo.</p>
+      <div class="flex gap-2 justify-center">
+        <button id="btnLoseRetry" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-sm transition">
+          ↺ Reintentar Nivel
+        </button>
+        <button id="btnLoseMap" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm border border-slate-700 transition">
+          🗺️ Mapa
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 400-Level Selector Modal -->
+  <div id="mapModal" class="fixed inset-0 z-40 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-5">
+    <div class="glass neon-border rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between gap-2 flex-wrap">
+        <div>
+          <h3 class="text-base sm:text-lg font-black text-white">Mapa de 400 Niveles · Crypto Blast</h3>
+          <p class="text-xs text-slate-400">5 Mundos temáticos · 400 tableros y retos únicos sin repetir</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <input id="jumpLevelInput" type="number" min="1" max="400" placeholder="Ir al 1-400" class="w-28 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-cyan-400" />
+          <button id="btnJumpLevel" class="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs transition">Ir</button>
+          <button id="btnCloseMap" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold">✕</button>
+        </div>
+      </div>
+
+      <!-- World Tabs -->
+      <div id="worldTabs" class="px-4 py-2.5 border-b border-slate-800 flex gap-1.5 overflow-x-auto custom-scroll"></div>
+
+      <!-- Levels Grid -->
+      <div id="levelsGrid" class="p-4 grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 overflow-y-auto custom-scroll flex-1"></div>
+    </div>
+  </div>
+
+  <!-- Class Guide Modal -->
+  <div id="guideModal" class="fixed inset-0 z-40 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-5">
+    <div class="glass neon-border rounded-2xl max-w-2xl w-full max-h-[88vh] flex flex-col overflow-hidden">
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+        <h3 class="text-base sm:text-lg font-black text-white">📚 Guía de Clase: Oferta y Demanda Cripto (2026)</h3>
+        <button id="btnCloseGuide" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold">✕</button>
+      </div>
+      <div class="p-4 sm:p-5 overflow-y-auto custom-scroll space-y-3 text-xs sm:text-sm text-slate-200 leading-relaxed">
+        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+          <div class="font-bold text-cyan-300 mb-1">Módulo 1 (Niveles 1–80): Fundamentos de Oferta y Demanda</div>
+          <p>La <strong>Oferta (S)</strong> es la cantidad disponible para vender; la <strong>Demanda (D)</strong> es lo que los compradores desean adquirir. Cuando D &gt; S hay <strong>escasez</strong> y sube el precio; cuando S &gt; D hay <strong>excedente</strong> y baja el precio. El <strong>equilibrio (E1)</strong> iguala ambas fuerzas y se desplaza a <strong>E2</strong> si entra más demanda.</p>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+          <div class="font-bold text-amber-300 mb-1">Módulo 2 (Niveles 81–160): Ciclos de Bitcoin y Escasez</div>
+          <p>Bitcoin tiene oferta máxima fija de <strong>21 millones</strong> y un <strong>Halving cada 4 años</strong> que reduce 50% la emisión nueva (oferta inelástica). Pasó de <strong>$0.0008</strong> (oct 2009) y el <em>Pizza Day</em> (mayo 2010: 10,000 BTC por 2 pizzas = $41) a <strong>$1.00</strong> (feb 2011) y su máximo histórico de <strong>$126,198</strong> (oct 2025) por ETFs spot e instituciones.</p>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+          <div class="font-bold text-rose-300 mb-1">Módulo 3 (Niveles 161–240): Hackeo a Binance (Oct 2026) y Seguridad</div>
+          <p>El <strong>29 de octubre de 2026</strong>, hackers vinculados a Corea del Norte robaron <strong>$6.36 mil millones ($6,360M)</strong> de Binance, provocando $628M liquidados en una hora y <strong>$1,570M</strong> en futuros. BTC cayó bajo $77,000 hasta ~$62,112. <strong>4 Reglas de Oro:</strong> custodia propia (billetera fría), 2FA con app/llave física, diversificar plataformas y evitar deuda excesiva.</p>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+          <div class="font-bold text-purple-300 mb-1">Módulo 4 (Niveles 241–320): Psicología Fear &amp; Greed</div>
+          <p>El índice mide emociones de 0 a 100. En <strong>agosto 2026</strong> marcó <strong>82 (Codicia Extrema / FOMO)</strong>, en <strong>octubre</strong> estuvo en <strong>50 (Neutral)</strong> y tras el hackeo cayó 69 puntos hasta <strong>10–13 (Miedo Extremo)</strong> en noviembre 2026.</p>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+          <div class="font-bold text-emerald-300 mb-1">Módulo 5 (Niveles 321–400): Caso GTA 6 (2026) vs. Bitcoin</div>
+          <p><strong>GTA 6</strong> se lanza el <strong>19 de noviembre de 2026</strong> (solo PS5 y Xbox Series X|S) a <strong>$79.99</strong> (Standard) y <strong>$99.99</strong> (Ultimate con 16 extras). Es un <strong>mercado centralizado</strong> con precio fijo y demanda inelástica, opuesto al <strong>mercado descentralizado</strong> de Bitcoin donde el precio cambia cada segundo.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. DETERMINISTIC PRNG & AUDIO ENGINE
+    // =========================================================================
+    function mulberry32(seed) {
+      let a = seed >>> 0;
+      return function() {
+        a |= 0;
+        a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    const AudioFX = {
+      ctx: null,
+      muted: false,
+      init() {
+        if (!this.ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) this.ctx = new AC();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+      },
+      tone(freq, dur, type = 'sine', vol = 0.08, delay = 0) {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime + delay;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + dur);
+      },
+      pop(count) {
+        const base = 320 + Math.min(count, 10) * 45;
+        this.tone(base, 0.1, 'triangle', 0.09, 0);
+        this.tone(base * 1.25, 0.12, 'sine', 0.06, 0.04);
+      },
+      blast() {
+        this.tone(180, 0.18, 'sawtooth', 0.09, 0);
+        this.tone(520, 0.22, 'triangle', 0.08, 0.05);
+      },
+      win() {
+        [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => this.tone(f, 0.18, 'triangle', 0.09, i * 0.08));
+      },
+      lose() {
+        [330, 293.66, 246.94].forEach((f, i) => this.tone(f, 0.2, 'sawtooth', 0.06, i * 0.12));
+      },
+      error() {
+        this.tone(170, 0.12, 'square', 0.05, 0);
+      }
+    };
+
+    // =========================================================================
+    // 2. TOKEN DEFINITIONS & WORLD METADATA
+    // =========================================================================
+    const TOKENS = [
+      { id: 'btc', label: 'BTC', name: 'Bitcoin', color: '#f59e0b', dark: '#b45309', glow: 'rgba(245,158,11,0.45)', symbol: '₿' },
+      { id: 'dem', label: 'DEM', name: 'Demanda', color: '#06b6d4', dark: '#0e7490', glow: 'rgba(6,182,212,0.45)', symbol: '↗' },
+      { id: 'ofe', label: 'OFE', name: 'Oferta', color: '#8b5cf6', dark: '#5b21b6', glow: 'rgba(139,92,246,0.45)', symbol: '⚖' },
+      { id: 'etf', label: 'ETF', name: 'ETFs Spot', color: '#10b981', dark: '#047857', glow: 'rgba(16,185,129,0.45)', symbol: '🏛' },
+      { id: 'fud', label: 'FUD', name: 'Pánico/FUD', color: '#f43f5e', dark: '#9f1239', glow: 'rgba(244,63,94,0.45)', symbol: '⚠' },
+      { id: 'gta', label: 'GTA', name: 'GTA 6', color: '#ec4899', dark: '#9d174d', glow: 'rgba(236,72,153,0.45)', symbol: '🎮' }
+    ];
+
+    const WORLDS = [
+      { id: 1, name: 'Mundo 1: Fundamentos', range: [1, 80], color: 'cyan', desc: 'Escasez, excedente y punto de equilibrio' },
+      { id: 2, name: 'Mundo 2: Ciclos BTC', range: [81, 160], color: 'amber', desc: '21M límite, Halving y de $0.0008 a $126,198' },
+      { id: 3, name: 'Mundo 3: Hackeo 2026', range: [161, 240], color: 'rose', desc: 'Robo de $6.36B a Binance y 4 Reglas de Oro' },
+      { id: 4, name: 'Mundo 4: Fear & Greed', range: [241, 320], color: 'purple', desc: 'Psicología del mercado (0–100) y FOMO' },
+      { id: 5, name: 'Mundo 5: GTA 6 y Maestría', range: [321, 400], color: 'emerald', desc: 'Precio fijo ($79.99/$99.99) vs. Precio libre' }
+    ];
+
+    // =========================================================================
+    // 3. 400 UNIQUE, NON-REPEATING EDUCATIONAL CHALLENGES & CAPSULES
+    // =========================================================================
+    const CORE_QUESTIONS = [
+      // Mundo 1 (1-80)
+      { m: 1, q: '¿Qué ocurre con el precio cuando la demanda supera a la oferta disponible (escasez)?', opts: ['Sube hasta equilibrarse', 'Baja inmediatamente', 'Se congela para siempre', 'Desaparece la oferta'], a: 0, exp: 'En situación de escasez, muchos compradores compiten por pocas unidades y el precio sube.' },
+      { m: 1, q: 'Cuando hay excedente (la oferta supera a la demanda), ¿qué hacen los vendedores?', opts: ['Bajan el precio para liquidar', 'Suben el precio al doble', 'Retiran todas las monedas', 'Prohíben las compras'], a: 0, exp: 'Al sobrar unidades que nadie compra, los vendedores reducen el precio para atraer demanda.' },
+      { m: 1, q: 'En el gráfico de equilibrio, ¿qué representa el punto E1?', opts: ['Cantidad ofrecida iguala a la demandada', 'Máximo miedo del mercado', 'Quiebra de un exchange', 'Precio mínimo histórico'], a: 0, exp: 'El punto de equilibrio E1 es donde compradores y vendedores coinciden sin que sobre ni falte producto.' },
+      { m: 1, q: 'Si entra más dinero comprador (desplazamiento de D1 a D2), ¿hacia dónde se mueve el equilibrio?', opts: ['Sube el precio de equilibrio a E2', 'Baja el precio a cero', 'No cambia el equilibrio', 'Se elimina la curva de oferta'], a: 0, exp: 'Mayor demanda desplaza la curva a la derecha y eleva el precio de equilibrio a E2.' },
+      { m: 1, q: 'Según la Ley de Demanda, si el precio de un activo sube (manteniendo lo demás igual):', opts: ['Baja la cantidad comprada', 'Sube la cantidad comprada', 'La oferta se vuelve infinita', 'Desaparece el mercado'], a: 0, exp: 'La Ley de Demanda establece una relación inversa entre precio y cantidad demandada.' },
+      { m: 1, q: 'Según la Ley de Oferta, a mayor precio en el mercado:', opts: ['Más vendedores ofrecen el activo', 'Menos vendedores quieren vender', 'Se prohíbe la minería', 'Los compradores fijan el precio'], a: 0, exp: 'Un precio más alto incentiva a más vendedores a ofrecer sus unidades.' },
+      { m: 1, q: 'Adivinanza Fintech: "Todos me quieren, pero existo en poca cantidad. Cuanto más difícil soy de hallar, más valgo".', opts: ['Escasez', 'Excedente', 'Apalancamiento', 'Inflación'], a: 0, exp: 'La escasez ocurre cuando la demanda supera la cantidad disponible.' },
+      { m: 1, q: 'Adivinanza Fintech: "Vivo justo donde compradores y vendedores aceptan el mismo precio".', opts: ['Equilibrio', 'Pánico', 'Burbuja', 'Custodia'], a: 0, exp: 'El punto de equilibrio es el cruce exacto entre oferta y demanda.' },
+      { m: 1, q: 'Adivinanza Fintech: "Cuando todos venden y nadie compra, aparezco en exceso y hago caer el precio".', opts: ['Excedente', 'Halving', 'ETF Spot', 'Demanda inelástica'], a: 0, exp: 'El excedente presiona los precios a la baja.' },
+      { m: 1, q: 'En los exchanges de criptomonedas, ¿con qué frecuencia se recalcula el equilibrio de precios?', opts: ['Cada segundo', 'Una vez al año', 'Cada 4 años', 'Solo los lunes'], a: 0, exp: 'Los libros de órdenes de los exchanges recalculan el equilibrio en tiempo real cada segundo.' },
+
+      // Mundo 2 (81-160)
+      { m: 2, q: '¿Cuál es el límite máximo de oferta escrito en el código de Bitcoin?', opts: ['21 millones de BTC', '100 millones de BTC', '1 millón de BTC', 'Ilimitado'], a: 0, exp: 'El protocolo de Bitcoin fija un tope inalterable de 21 millones de monedas.' },
+      { m: 2, q: '¿Cada cuánto tiempo ocurre el Halving de Bitcoin y qué hace?', opts: ['Cada 4 años, reduce 50% las monedas nuevas', 'Cada año, duplica la oferta', 'Cada mes, quema el 10%', 'Cada 10 años, reinicia el precio'], a: 0, exp: 'El Halving recorta a la mitad la recompensa de los mineros cada 4 años.' },
+      { m: 2, q: '¿Por qué se dice que la oferta de Bitcoin es inelástica?', opts: ['No sube aunque el precio se dispare', 'Cambia cada minuto según Rockstar', 'Se imprime según la inflación', 'Depende del clima'], a: 0, exp: 'Al estar fijada en código, la emisión no puede acelerarse aunque el precio suba mucho.' },
+      { m: 2, q: '¿Cuál fue el primer valor registrado de Bitcoin en octubre de 2009?', opts: ['$0.0008 USD', '$1.00 USD', '$41.00 USD', '$100.00 USD'], a: 0, exp: 'En octubre de 2009 apenas había demanda comercial y valía $0.0008 USD.' },
+      { m: 2, q: 'En el "Pizza Day" (mayo 2010), ¿cuántos BTC se pagaron por dos pizzas de $41 USD?', opts: ['10,000 BTC', '100 BTC', '1,000 BTC', '21 BTC'], a: 0, exp: 'Se pagaron 10,000 BTC (~$0.0041 por BTC) en la primera compra física famosa.' },
+      { m: 2, q: '¿Cuándo alcanzó Bitcoin por primera vez la paridad de $1.00 USD?', opts: ['Febrero de 2011', 'Octubre de 2009', 'Octubre de 2025', 'Noviembre de 2026'], a: 0, exp: 'En febrero de 2011 Bitcoin llegó a valer $1.00 USD.' },
+      { m: 2, q: '¿Cuál fue el máximo histórico (ATH) de Bitcoin en octubre de 2025?', opts: ['$126,198 USD', '$79,990 USD', '$97,861 USD', '$60,074 USD'], a: 0, exp: 'Impulsado por ETFs spot e instituciones post-Halving, alcanzó $126,198 USD.' },
+      { m: 2, q: '¿Qué papel jugaron los ETFs Spot en Wall Street para el precio de Bitcoin?', opts: ['Facilitaron la entrada de fondos y bancos', 'Prohibieron comprar BTC', 'Crearon más de 21M de BTC', 'Fijaron el precio en $79.99'], a: 0, exp: 'Los ETFs Spot canalizaron miles de millones de demanda institucional.' },
+      { m: 2, q: '¿Cuál fue el mínimo anual registrado de Bitcoin en 2026 tras la corrección de ciclo?', opts: ['$60,074 USD', '$12,000 USD', '$126,198 USD', '$0.0008 USD'], a: 0, exp: 'En 2026 BTC cayó desde un pico anual de $97,861 hasta un mínimo de $60,074.' },
+      { m: 2, q: 'Verdadero o Falso: Si Bitcoin duplica su precio, los mineros crean el doble de monedas al instante.', opts: ['Falso, la emisión es fija por protocolo', 'Verdadero, duplican los bloques', 'Verdadero, si hay ETFs', 'Depende de Binance'], a: 0, exp: 'La oferta nueva de Bitcoin es inelástica y sigue el calendario del protocolo.' },
+
+      // Mundo 3 (161-240)
+      { m: 3, q: '¿Qué ocurrió el 29 de octubre de 2026 en el mercado cripto?', opts: ['Robo de $6.36B a Binance por hackers', 'Lanzamiento de GTA 6 en PC', 'Bitcoin llegó a $200,000', 'Se eliminó el límite de 21M'], a: 0, exp: 'Hackers vinculados a Corea del Norte drenaron $6,360M de billeteras de Binance.' },
+      { m: 3, q: 'Tras el hackeo a Binance en octubre de 2026, ¿cuánto se liquidó en futuros?', opts: ['$1,570M ($1.57B)', '$41 USD', '$79.99 USD', '$10 millones'], a: 0, exp: 'El ataque desató $628M en liquidaciones en una hora y $1,570M en futuros.' },
+      { m: 3, q: '¿Por qué un hackeo masivo hace caer el precio tan rápido?', opts: ['Choque de oferta + caída de demanda + liquidaciones', 'Los mineros regalan monedas', 'Suben las tasas de GTA 6', 'Se duplica el Fear & Greed'], a: 0, exp: 'Miles venden por pánico, los compradores esperan en efectivo y se ejecutan liquidaciones forzadas.' },
+      { m: 3, q: '¿Qué nivel clave perdió Bitcoin inmediatamente tras el hackeo a Binance de 2026?', opts: ['Los $77,000 USD', 'Los $1,000 USD', 'Los $126,198 USD', 'Los $500 USD'], a: 0, exp: 'BTC cayó a mínimos de seis semanas (~$76,400–$77,445) y luego presionó hacia ~$62,112.' },
+      { m: 3, q: 'Regla de Oro 1 para proteger activos digitales:', opts: ['Custodia propia en billeteras frías', 'Dejar todo en un solo exchange', 'Compartir la clave por chat', 'Operar con deuda máxima'], a: 0, exp: 'Las billeteras frías mantienen tus llaves privadas fuera del alcance de hackeos a exchanges.' },
+      { m: 3, q: 'Regla de Oro 2 (Autenticación fuerte): ¿qué 2FA debes usar?', opts: ['App autenticadora o llave física, nunca solo SMS', 'Solo contraseña simple', 'Solo SMS sin PIN', 'Ninguna verificación'], a: 0, exp: 'El SMS es vulnerable a suplantación de SIM; usa app 2FA o llave física.' },
+      { m: 3, q: 'Regla de Oro 3 para reducir el riesgo de plataforma:', opts: ['Diversificar entre plataformas', 'Concentrar 100% en un exchange', 'Usar la misma clave en todo', 'Comprar solo en pánico'], a: 0, exp: 'No concentrar todo el capital en un único intermediario reduce el riesgo sistémico.' },
+      { m: 3, q: 'Regla de Oro 4 sobre el apalancamiento (deuda):', opts: ['Evitar deuda excesiva para evitar liquidaciones', 'Pedir el máximo préstamo posible', 'Ignorar los stop-loss', 'Operar sin liquidez'], a: 0, exp: 'El apalancamiento multiplica el riesgo de liquidación forzada en caídas bruscas.' },
+      { m: 3, q: 'Principio clave de Economía Fintech tras el hackeo de 2026:', opts: ['El código define la escasez, la confianza define la demanda', 'Solo importa el precio de las pizzas', 'La seguridad no afecta al precio', 'Los exchanges nunca fallan'], a: 0, exp: 'En finanzas digitales, la confianza humana vale tanto como el código.' },
+      { m: 3, q: '¿Qué criptomonedas fueron sustraídas en el drenaje de billeteras de Binance de oct 2026?', opts: ['BTC, ETH y XRP', 'Solo Dogecoin', 'Solo acciones de Rockstar', 'Solo dinero en efectivo'], a: 0, exp: 'Los atacantes drenaron $6.36B principalmente en BTC, ETH y XRP.' },
+
+      // Mundo 4 (241-320)
+      { m: 4, q: '¿Cuál es la escala del Crypto Fear & Greed Index?', opts: ['De 0 (Miedo) a 100 (Codicia)', 'De 1 a 10', 'De -100 a +100', 'De $0 a $126,198'], a: 0, exp: '0 indica pánico vendedor extremo y 100 euforia compradora extrema.' },
+      { m: 4, q: '¿Qué marcó el Fear & Greed Index en noviembre de 2026 tras el hackeo?', opts: ['10 – 13 puntos (Miedo Extremo)', '82 puntos (Codicia Extrema)', '50 puntos (Neutral)', '99 puntos (Euforia)'], a: 0, exp: 'El índice se desplomó 69 puntos desde agosto hasta 10–13 en noviembre 2026.' },
+      { m: 4, q: '¿Cuál fue el máximo anual del Fear & Greed Index en agosto de 2026?', opts: ['82 puntos (Codicia Extrema)', '13 puntos (Miedo Extremo)', '50 puntos (Neutral)', '25 puntos (Miedo)'], a: 0, exp: 'En agosto de 2026 el mercado vivió euforia compradora con 82 puntos.' },
+      { m: 4, q: '¿Qué significa FOMO en periodos de Codicia Extrema (75–100)?', opts: ['Miedo a quedarse fuera, todos compran a la vez', 'Miedo a hackeos en frío', 'Venta masiva por pánico', 'Equilibrio perfecto'], a: 0, exp: 'El FOMO dispara la demanda por encima de la oferta y crea riesgo de burbuja.' },
+      { m: 4, q: '¿Qué ocurre en el mercado durante el Miedo Extremo (0–24)?', opts: ['Aumenta la oferta inmediata y cae la demanda', 'Todos compran con euforia', 'Se detienen los retiros por ley', 'El precio siempre sube'], a: 0, exp: 'Los inversores venden rápido por temor a perder más y los compradores esperan.' },
+      { m: 4, q: 'Verdadero o Falso: Una lectura de 13 puntos en el índice indica Codicia Extrema.', opts: ['Falso, indica Miedo Extremo', 'Verdadero, es euforia', 'Verdadero, es zona neutral', 'No mide emociones'], a: 0, exp: 'Los valores entre 0 y 24 corresponden a Miedo Extremo.' },
+      { m: 4, q: '¿En qué zona estaba el Fear & Greed Index en octubre de 2026 antes del hackeo?', opts: ['50 puntos (Zona Neutral)', '10 puntos (Miedo)', '95 puntos (Euforia)', '0 puntos'], a: 0, exp: 'Antes del choque del 29 de octubre, el mercado mostraba equilibrio emocional en 50.' },
+      { m: 4, q: '¿Cuántos puntos cayó el sentimiento del mercado entre agosto (82) y noviembre (13) de 2026?', opts: ['-69 puntos', '-10 puntos', '+50 puntos', '-100 puntos'], a: 0, exp: 'Pasó de 82 a 13 puntos (-69 puntos), mostrando lo rápido que gira la confianza.' },
+      { m: 4, q: 'Cuando hay FOMO y Codicia Extrema, ¿qué riesgo económico aumenta?', opts: ['Riesgo de burbuja y corrección brusca', 'Riesgo de oferta infinita de BTC', 'Riesgo de precio fijo en $79.99', 'Desaparición de la demanda'], a: 0, exp: 'Las compras emocionales empujan el precio por encima de los fundamentales.' },
+      { m: 4, q: '¿Qué fuerza amplifica las caídas cuando el Fear & Greed cae debajo de 15?', opts: ['El pánico vendedor y liquidaciones', 'La escasez de consolas PS5', 'La entrada de ETFs nuevos', 'El Halving automático'], a: 0, exp: 'El miedo colectivo acelera las órdenes de venta al mismo tiempo.' },
+
+      // Mundo 5 (321-400)
+      { m: 5, q: '¿Cuándo se lanza Grand Theft Auto VI (GTA 6) y en qué plataformas?', opts: ['19 nov 2026 en PS5 y Xbox Series X|S', 'Oct 2025 en PC y móvil', 'May 2010 en consolas', 'Enero 2026 solo en PC'], a: 0, exp: 'Rockstar Games fija el lanzamiento el 19 de noviembre de 2026 solo en consolas.' },
+      { m: 5, q: '¿Cuál es el precio de lanzamiento de GTA 6 Standard Edition en 2026?', opts: ['$79.99 USD (sube desde $69.99)', '$49.99 USD', '$99.99 USD', '$126.19 USD'], a: 0, exp: 'La enorme demanda permitió subir el piso de precio de $69.99 a $79.99 USD.' },
+      { m: 5, q: '¿Qué incluye GTA 6 Ultimate Edition ($99.99 USD) y cómo le fue en preventas?', opts: ['16 extras/vehículos; superó a la edición base', 'Solo el mapa; nadie la compró', 'Incluye 1 Bitcoin gratis', 'Es más barata que la Standard'], a: 0, exp: 'La demanda inelástica hizo que la edición de $99.99 superara en preventas a la base.' },
+      { m: 5, q: '¿Por qué la demanda de GTA 6 se considera inelástica?', opts: ['Millones lo compran igual aunque suba el precio', 'Nadie lo compra si sube $1', 'Su precio cambia cada segundo', 'Solo hay 21 millones de copias digitales'], a: 0, exp: 'La fuerte lealtad y expectativa hacen que los jugadores toleren un precio mayor.' },
+      { m: 5, q: '¿Cuál es la diferencia clave entre GTA 6 y Bitcoin respecto a quién fija el precio?', opts: ['Rockstar fija GTA 6; oferta y demanda fijan Bitcoin', 'El gobierno fija ambos', 'Binance fija el precio de GTA 6', 'Ambos cambian cada segundo'], a: 0, exp: 'GTA 6 es un mercado centralizado de precio fijo; Bitcoin es descentralizado y libre.' },
+      { m: 5, q: 'En GTA 6 digital, la oferta de copias es casi ilimitada. ¿Dónde ocurre la escasez física?', opts: ['En consolas y copias físicas en tiendas', 'En los servidores de Bitcoin', 'En la descarga digital', 'En los ETFs de Wall Street'], a: 0, exp: 'El stock limitado de unidades físicas y consolas genera riesgo de agotamiento y reventa.' },
+      { m: 5, q: '¿Por qué la ausencia de versión de PC en el día 1 de GTA 6 afecta al mercado?', opts: ['Concentra la demanda en PS5 y Xbox Series X|S', 'Elimina la demanda en consolas', 'Baja el precio a $10', 'Convierte el juego en criptomoneda'], a: 0, exp: 'La escasez de plataformas disponibles concentra toda la demanda inicial en dos consolas.' },
+      { m: 5, q: 'Verdadero o Falso: El precio de GTA 6 en tienda digital cambia cada minuto como Bitcoin.', opts: ['Falso, es un precio fijo centralizado', 'Verdadero, fluctúa cada segundo', 'Verdadero, depende del Halving', 'Solo si baja el Fear & Greed'], a: 0, exp: 'En mercados centralizados el fabricante fija el precio de catálogo.' },
+      { m: 5, q: 'Si Rockstar sube GTA 6 de $69.99 a $79.99 (+14.3%) y las ventas siguen altísimas, demuestra:', opts: ['Baja elasticidad-precio (demanda inelástica)', 'Excedente extremo', 'Miedo Extremo en gamers', 'Oferta de 21 millones'], a: 0, exp: 'Cuando la cantidad demandada cae poco ante una subida de precio, la demanda es inelástica.' },
+      { m: 5, q: '¿Qué lección une a Bitcoin y GTA 6 en la economía digital de 2026?', opts: ['La intensidad de la demanda define el poder de precio', 'Ambos usan billeteras frías', 'Ambos tienen Halving cada 4 años', 'Ninguno tiene escasez'], a: 0, exp: 'Tanto en activos descentralizados como en entretenimiento, la demanda manda.' }
+    ];
+
+    function getChallengeForLevel(lvl) {
+      // Levels 1..50 use the 50 curated core questions across the 5 worlds?
+      // Better: map curated questions to key milestone levels (10 per world), and generate 350 unique parametric scenarios for the rest!
+      const worldIdx = Math.floor((lvl - 1) / 80); // 0..4
+      const posInWorld = (lvl - 1) % 80; // 0..79
+      // Every 8th level in each world (0, 8, 16, ... 72 -> 10 levels per world = 50 levels total) uses a distinct CORE_QUESTION
+      if (posInWorld % 8 === 0) {
+        const coreIdx = worldIdx * 10 + (posInWorld / 8);
+        const cq = CORE_QUESTIONS[coreIdx];
+        if (cq) {
+          // Shuffle options deterministically
+          const rng = mulberry32(lvl * 7919);
+          const indexed = cq.opts.map((text, idx) => ({ text, isCorrect: idx === cq.a }));
+          for (let i = indexed.length - 1; i > 0; i--) {
+            const j = Math.floor(rng() * (i + 1));
+            [indexed[i], indexed[j]] = [indexed[j], indexed[i]];
+          }
+          return {
+            q: cq.q,
+            opts: indexed.map(o => o.text),
+            a: indexed.findIndex(o => o.isCorrect),
+            exp: cq.exp
+          };
+        }
+      }
+
+      // Parametric unique generator for the remaining 350 levels (guaranteed unique per lvl)
+      const rng = mulberry32(lvl * 104729 + 31337);
+      const scenarioType = (lvl + worldIdx) % 5;
+
+      let q, correct, wrongs, exp;
+
+      if (worldIdx === 0) {
+        // Mundo 1: Oferta, Demanda, Equilibrio cuantitativo único
+        const baseD = 40 + (lvl * 3) % 120;
+        const baseS = 20 + (lvl * 5) % 90;
+        if (baseD !== baseS && lvl % 2 === 0) {
+          const isShortage = baseD > baseS;
+          const diff = Math.abs(baseD - baseS);
+          const price = 10 + (lvl % 40);
+          q = `[Caso #${lvl}] A un precio de $${price}, la demanda es ${baseD} unidades y la oferta es ${baseS} unidades. ¿Qué hay en el mercado y qué hará el precio?`;
+          correct = isShortage
+            ? `Escasez de ${diff} u. → el precio tiende a subir`
+            : `Excedente de ${diff} u. → el precio tiende a bajar`;
+          wrongs = [
+            isShortage ? `Excedente de ${diff} u. → el precio tiende a bajar` : `Escasez de ${diff} u. → el precio tiende a subir`,
+            `Equilibrio perfecto → el precio no cambia`,
+            `Escasez de ${diff + 15} u. → se congela el mercado`
+          ];
+          exp = isShortage
+            ? `Como D (${baseD}) > S (${baseS}), faltan ${diff} unidades (escasez) y la competencia entre compradores sube el precio.`
+            : `Como S (${baseS}) > D (${baseD}), sobran ${diff} unidades (excedente) y los vendedores bajan el precio.`;
+        } else {
+          const pEq = 12 + (lvl * 2) % 85;
+          const shift = 4 + (lvl % 15);
+          const dir = lvl % 3 === 0 ? 'baja' : 'sube';
+          q = `[Caso #${lvl}] Un activo está en equilibrio E1 a $${pEq}. Si la demanda ${dir === 'sube' ? 'aumenta (D1 → D2)' : 'disminuye'} en $${shift} de presión, ¿qué ocurre con el equilibrio E2?`;
+          correct = dir === 'sube'
+            ? `Sube por encima de $${pEq} (mayor demanda)`
+            : `Baja por debajo de $${pEq} (menor demanda)`;
+          wrongs = [
+            dir === 'sube' ? `Baja por debajo de $${pEq}` : `Sube por encima de $${pEq}`,
+            `Permanece exactamente en $${pEq}`,
+            `La oferta desaparece por completo`
+          ];
+          exp = `Un desplazamiento de la demanda mueve el punto de equilibrio ${dir === 'sube' ? 'hacia arriba' : 'hacia abajo'} respecto a E1 ($${pEq}).`;
+        }
+      } else if (worldIdx === 1) {
+        // Mundo 2: Ciclos BTC, Halving, Pizza Day, ATH
+        if (lvl % 3 === 0) {
+          const halvings = 1 + (lvl % 4);
+          const startBlock = 50 / Math.pow(2, halvings - 1);
+          const afterBlock = startBlock / 2;
+          q = `[Ciclo #${lvl}] Antes del Halving #${halvings}, se emiten ${startBlock} BTC por bloque. Tras el recorte del 50%, ¿cuántos BTC nuevos salen por bloque?`;
+          correct = `${afterBlock} BTC por bloque (oferta más escasa)`;
+          wrongs = [
+            `${startBlock * 2} BTC por bloque`,
+            `${startBlock} BTC sin cambios`,
+            `${afterBlock + 12.5} BTC por bloque`
+          ];
+          exp = `Cada Halving reduce exactamente un 50% la emisión de nuevas monedas (${startBlock} → ${afterBlock} BTC).`;
+        } else {
+          const btcPrice = 60074 + ((lvl * 733) % 66124); // entre $60,074 y $126,198
+          const ath = 126198;
+          const pct = Math.round(((ath - btcPrice) / ath) * 100);
+          q = `[Mercado #${lvl}] Si BTC cotiza a $${btcPrice.toLocaleString('en-US')} frente a su ATH de oct 2025 ($126,198), ¿qué fuerza explica una subida hacia el récord?`;
+          correct = `Aumento de demanda institucional (ETFs) con oferta fija de 21M`;
+          wrongs = [
+            `Aumento de emisión minera por encima de 21M`,
+            `Venta masiva por pánico en exchanges`,
+            `Fijación de precio oficial por una empresa`
+          ];
+          exp = `A $${btcPrice.toLocaleString('en-US')} (un ${pct}% bajo el ATH), la oferta inelástica hace que nuevos flujos de demanda impulsen el precio.`;
+        }
+      } else if (worldIdx === 2) {
+        // Mundo 3: Hackeo 2026 & Seguridad
+        if (lvl % 2 === 0) {
+          const stolenM = 6360;
+          const liqHour = 400 + (lvl % 300);
+          const fngDrop = 10 + (lvl % 4);
+          q = `[Alerta #${lvl}] Tras un ataque similar al de Binance oct 2026 ($${stolenM}M robados) con $${liqHour}M liquidados en 1h, ¿por qué cae el precio en cascada?`;
+          correct = `Choque de oferta por pánico + liquidaciones forzadas de deuda`;
+          wrongs = [
+            `Porque el protocolo de Bitcoin crea el doble de monedas`,
+            `Porque sube la demanda compradora al instante`,
+            `Porque el índice Fear & Greed sube a 90`
+          ];
+          exp = `El miedo (${fngDrop} pts) dispara ventas inmediatas y el sistema liquida posiciones apalancadas automáticamente.`;
+        } else {
+          const pctCold = 70 + (lvl % 25);
+          q = `[Seguridad #${lvl}] Un inversor guarda ${pctCold}% en billetera fría, usa 2FA con app física y no usa apalancamiento. ¿Qué riesgos de la clase mitiga?`;
+          correct = `Riesgo de custodia en exchange, robo de SMS y liquidación forzada`;
+          wrongs = [
+            `Garantiza que Bitcoin nunca baje de $126,198`,
+            `Elimina el límite de 21 millones de BTC`,
+            `Convierte Bitcoin en un mercado centralizado`
+          ];
+          exp = `Aplica 3 Reglas de Oro: custodia propia, 2FA fuerte (no SMS) y cero deuda excesiva.`;
+        }
+      } else if (worldIdx === 3) {
+        // Mundo 4: Fear & Greed
+        const fngVal = (lvl % 2 === 0) ? (5 + (lvl % 19)) : (76 + (lvl % 23));
+        const isFear = fngVal <= 24;
+        const delta = Math.abs(50 - fngVal);
+        q = `[Psicología #${lvl}] El Fear & Greed Index marca ${fngVal} puntos (${delta} pts lejos de zona neutral 50). ¿Qué conducta domina el mercado?`;
+        correct = isFear
+          ? `Miedo Extremo: ventas por pánico aumentan la oferta inmediata`
+          : `Codicia Extrema (FOMO): todos compran a la vez y hay riesgo de burbuja`;
+        wrongs = [
+          isFear ? `Codicia Extrema (FOMO): euforia compradora` : `Miedo Extremo: pánico vendedor`,
+          `Zona Neutral: equilibrio sin presión emocional`,
+          `Precio fijo sin variación posible`
+        ];
+        exp = isFear
+          ? `Con ${fngVal} pts (0–24), el miedo empuja a vender rápido y paraliza a nuevos compradores.`
+          : `Con ${fngVal} pts (75–100), el FOMO dispara la demanda por encima de la oferta.`;
+      } else {
+        // Mundo 5: GTA 6 & Maestría Mixta
+        if (lvl % 2 === 0) {
+          const copies = 10 + (lvl % 40); // millones
+          const stdTotal = (copies * 79.99).toFixed(0);
+          const ultTotal = (copies * 99.99).toFixed(0);
+          q = `[Caso GTA 6 #${lvl}] Si ${copies}M de jugadores compran GTA 6 (19 nov 2026) a $99.99 en vez de $79.99, ¿qué demuestra este ingreso extra ($${ultTotal}M vs $${stdTotal}M)?`;
+          correct = `Demanda inelástica: tolera un precio mayor en mercado centralizado`;
+          wrongs = [
+            `Oferta descentralizada limitada a 21 millones`,
+            `Miedo Extremo de los consumidores`,
+            `Excedente masivo que obliga a bajar precios`
+          ];
+          exp = `GTA 6 muestra cómo una demanda muy intensa permite a Rockstar capturar más valor con precio fijo.`;
+        } else {
+          const btcMove = 2 + (lvl % 12);
+          q = `[Síntesis #${lvl}] En un mismo día de nov 2026, GTA 6 mantiene su etiqueta de $79.99 mientras Bitcoin oscila ±${btcMove}% en exchanges. ¿Por qué?`;
+          correct = `GTA 6 tiene precio fijo centralizado; BTC recalcula oferta/demanda cada segundo`;
+          wrongs = [
+            `Rockstar cambia el precio de GTA 6 cada minuto`,
+            `Bitcoin tiene oferta digital ilimitada`,
+            `GTA 6 sufrió un Halving del 50%`
+          ];
+          exp = `Es el puente conceptual clave: precio fijo centralizado vs. precio libre descentralizado.`;
+        }
+      }
+
+      const opts = [correct, ...wrongs];
+      const indexed = opts.map((text, idx) => ({ text, isCorrect: idx === 0 }));
+      for (let i = indexed.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [indexed[i], indexed[j]] = [indexed[j], indexed[i]];
+      }
+      return {
+        q,
+        opts: indexed.map(o => o.text),
+        a: indexed.findIndex(o => o.isCorrect),
+        exp
+      };
+    }
+
+    const CAPSULES = [
+      'La oferta (S) y la demanda (D) son las dos fuerzas invisibles detrás de cada precio.',
+      'Escasez: cuando la demanda supera la oferta, los compradores compiten y el precio sube.',
+      'Excedente: cuando sobran unidades, los vendedores bajan el precio para liquidar.',
+      'El punto de equilibrio (E1) se desplaza a E2 cuando entra nuevo dinero comprador.',
+      'Bitcoin tiene un límite matemático de 21 millones de monedas escrito en código.',
+      'Cada 4 años, el Halving reduce un 50% la emisión de nuevos Bitcoin.',
+      'En octubre de 2009 Bitcoin valía $0.0008; en octubre de 2025 alcanzó $126,198 USD.',
+      'Pizza Day (mayo 2010): 10,000 BTC compraron dos pizzas de $41 USD.',
+      'El 29 de octubre de 2026, hackers robaron $6.36B de Binance y liquidaron $1.57B en futuros.',
+      'Custodia propia, 2FA físico/app, diversificar plataformas y evitar deuda: las 4 Reglas de Oro.',
+      'El Fear & Greed Index cayó 69 puntos: de 82 (Codicia Extrema, ago 2026) a 13 (Miedo Extremo, nov 2026).',
+      'GTA 6 (19 nov 2026) cuesta $79.99 Standard y $99.99 Ultimate: ejemplo de demanda inelástica y precio fijo.'
+    ];
+
+    // =========================================================================
+    // 4. LEVEL GENERATOR (400 UNIQUE LEVELS OF DIVERSE COMPLEXITY)
+    // =========================================================================
+    function generateLevelConfig(lvl) {
+      const rng = mulberry32(lvl * 2654435761 + 97);
+      const worldIdx = Math.floor((lvl - 1) / 80); // 0..4
+      const posInWorld = (lvl - 1) % 80; // 0..79
+      const isBoss = lvl % 20 === 0;
+      const isHard = !isBoss && (lvl % 5 === 0 || posInWorld >= 55);
+
+      // Grid size scales by world & progression
+      let size = 6;
+      if (worldIdx === 1 || worldIdx === 2) size = 7;
+      if (worldIdx >= 3) size = 8;
+
+      // Token variety scales from 4 to 6
+      let numColors = 4;
+      if (worldIdx === 1) numColors = posInWorld < 40 ? 4 : 5;
+      if (worldIdx === 2 || worldIdx === 3) numColors = 5;
+      if (worldIdx === 4) numColors = 6;
+
+      // Minimum cluster size: 2 normally, 3 on Bosses & late hard levels
+      const minGroup = (isBoss || (worldIdx >= 3 && lvl % 7 === 0)) ? 3 : 2;
+
+      // Moves budget
+      let moves = 18 + Math.floor(rng() * 6) - (isHard ? 2 : 0) + (isBoss ? 3 : 0);
+      if (size === 8) moves += 2;
+      moves = Math.max(14, Math.min(26, moves));
+
+      // Blocker cells (Vaults = 'vault', FUD ice/lock = 'lock')
+      // Guaranteed unique pattern per level via seeded placement
+      const blockerMap = Array.from({ length: size }, () => Array(size).fill(0));
+      let blockerCountTarget = Math.min(Math.floor(size * size * 0.22), Math.floor(lvl / 28) + (isHard ? 3 : 0) + (isBoss ? 5 : 0));
+      if (lvl <= 5) blockerCountTarget = 0;
+
+      let vaultsPlaced = 0;
+      let locksPlaced = 0;
+      let attempts = 0;
+      while ((vaultsPlaced + locksPlaced) < blockerCountTarget && attempts < 200) {
+        attempts++;
+        const r = Math.floor(rng() * size);
+        const c = Math.floor(rng() * size);
+        // Keep center slightly open on small boards
+        if (blockerMap[r][c] === 0) {
+          const type = (worldIdx >= 2 && rng() < 0.55) ? 2 : 1; // 1 = Vault (needs adjacent blast), 2 = Frozen FUD (1-hit shield)
+          blockerMap[r][c] = type;
+          if (type === 1) vaultsPlaced++;
+          else locksPlaced++;
+        }
+      }
+
+      // Objectives (2 objectives per level, scaled to level & world)
+      const objectives = [];
+      const activeTokenIds = TOKENS.slice(0, numColors).map(t => t.id);
+      const t1 = activeTokenIds[Math.floor(rng() * activeTokenIds.length)];
+      let t2 = activeTokenIds[Math.floor(rng() * activeTokenIds.length)];
+      if (t2 === t1) t2 = activeTokenIds[(activeTokenIds.indexOf(t1) + 1) % activeTokenIds.length];
+
+      const baseTarget = 10 + Math.floor(posInWorld / 6) + worldIdx * 3 + (isBoss ? 6 : 0);
+      objectives.push({ kind: 'token', id: t1, target: baseTarget, current: 0 });
+      if (vaultsPlaced > 0 && (lvl % 3 === 0 || isBoss)) {
+        objectives.push({ kind: 'vault', id: 'vault', target: vaultsPlaced, current: 0 });
+      } else {
+        objectives.push({ kind: 'token', id: t2, target: Math.max(8, baseTarget - 2), current: 0 });
+      }
+
+      const difficulty = isBoss ? 'Jefe' : (isHard ? 'Difícil' : 'Normal');
+      const subtitles = [
+        'Equilibrio de Mercado', 'Cruce Oferta-Demanda', 'Escasez y Precio',
+        'Ciclo Halving', 'Impulso Institucional', 'Protección de Billetera',
+        'Control de Pánico', 'Psicología FOMO', 'Caso GTA 6', 'Maestría Fintech'
+      ];
+
+      return {
+        level: lvl,
+        worldIdx,
+        size,
+        numColors,
+        minGroup,
+        moves,
+        difficulty,
+        subtitle: isBoss ? `Jefe de Módulo · Nivel ${lvl}` : subtitles[(lvl + worldIdx) % subtitles.length],
+        blockerMap,
+        objectives,
+        challenge: getChallengeForLevel(lvl),
+        capsule: CAPSULES[(lvl - 1) % CAPSULES.length]
+      };
+    }
+
+    // =========================================================================
+    // 5. GAME STATE & PERSISTENCE
+    // =========================================================================
+    const STORAGE_KEY = 'crypto_blast_400_save_v1';
+    let saveState = { currentLevel: 1, stars: {} };
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') saveState = { currentLevel: parsed.currentLevel || 1, stars: parsed.stars || {} };
+      }
+    } catch (e) {}
+
+    function persistSave() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(saveState)); } catch (e) {}
+    }
+
+    let state = {
+      cfg: null,
+      grid: [], // { tokenIdx, power: null|'row'|'col'|'bomb', blocker: 0|1|2 }
+      movesLeft: 0,
+      score: 0,
+      simPrice: 67420,
+      simFng: 50,
+      animating: false,
+      paused: false,
+      hoverGroup: [],
+      hintGroup: [],
+      particles: [],
+      floatingTexts: [],
+      bonusUsed: false
+    };
+
+    // =========================================================================
+    // 6. CANVAS & BOARD LOGIC
+    // =========================================================================
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let cellSize = 60;
+    let boardPadding = 8;
+
+    function resizeCanvas() {
+      const container = document.getElementById('boardContainer');
+      const rect = container.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const side = Math.max(260, Math.floor(Math.min(rect.width, rect.height || rect.width)));
+      canvas.width = side * dpr;
+      canvas.height = side * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (state.cfg) {
+        cellSize = (side - boardPadding * 2) / state.cfg.size;
+      }
+      drawBoard();
+    }
+
+    function initLevel(lvl) {
+      const clamped = Math.max(1, Math.min(400, lvl));
+      saveState.currentLevel = clamped;
+      persistSave();
+
+      const cfg = generateLevelConfig(clamped);
+      state.cfg = cfg;
+      state.movesLeft = cfg.moves;
+      state.score = 0;
+      state.simPrice = cfg.worldIdx === 1 ? 85400 : (cfg.worldIdx === 2 ? 64200 : 67800);
+      state.simFng = cfg.worldIdx === 3 ? 22 : (cfg.worldIdx === 2 ? 14 : 50);
+      state.animating = false;
+      state.paused = false;
+      state.hoverGroup = [];
+      state.hintGroup = [];
+      state.particles = [];
+      state.floatingTexts = [];
+      state.bonusUsed = false;
+
+      // Build grid deterministically
+      const rng = mulberry32(clamped * 5557 + 19);
+      state.grid = Array.from({ length: cfg.size }, (_, r) =>
+        Array.from({ length: cfg.size }, (_, c) => {
+          const b = cfg.blockerMap[r][c];
+          return {
+            tokenIdx: b === 1 ? -1 : Math.floor(rng() * cfg.numColors),
+            power: null,
+            blocker: b // 0=none, 1=vault (solid), 2=frozen shield
+          };
+        })
+      );
+
+      ensurePlayableMoves(true);
+      resizeCanvas();
+      updateUI();
+    }
+
+    function getConnectedGroup(r, c) {
+      const size = state.cfg.size;
+      const cell = state.grid[r]?.[c];
+      if (!cell || cell.tokenIdx < 0 || cell.blocker === 1) return [];
+      const target = cell.tokenIdx;
+      const visited = new Set();
+      const stack = [[r, c]];
+      const group = [];
+      while (stack.length) {
+        const [cr, cc] = stack.pop();
+        const key = `${cr},${cc}`;
+        if (visited.has(key)) continue;
+        visited.add(key);
+        const cur = state.grid[cr]?.[cc];
+        if (!cur || cur.blocker === 1 || cur.tokenIdx !== target) continue;
+        group.push([cr, cc]);
+        [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr, dc]) => {
+          const nr = cr + dr, nc = cc + dc;
+          if (nr >= 0 && nr < size && nc >= 0 && nc < size) stack.push([nr, nc]);
+        });
+      }
+      return group;
+    }
+
+    function findAllValidGroups() {
+      const size = state.cfg.size;
+      const seen = new Set();
+      const groups = [];
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          const key = `${r},${c}`;
+          if (seen.has(key)) continue;
+          const cell = state.grid[r][c];
+          if (!cell || cell.tokenIdx < 0 || cell.blocker === 1) continue;
+          if (cell.power) {
+            groups.push([[r, c]]);
+            seen.add(key);
+            continue;
+          }
+          const g = getConnectedGroup(r, c);
+          g.forEach(([gr, gc]) => seen.add(`${gr},${gc}`));
+          if (g.length >= state.cfg.minGroup) groups.push(g);
+        }
+      }
+      return groups;
+    }
+
+    function ensurePlayableMoves(silent = false) {
+      let groups = findAllValidGroups();
+      let guard = 0;
+      while (groups.length === 0 && guard < 15) {
+        guard++;
+        shuffleTokens();
+        groups = findAllValidGroups();
+      }
+      if (guard > 0 && !silent) showToast('⚖️ Mercado reequilibrado automáticamente');
+    }
+
+    function shuffleTokens() {
+      const size = state.cfg.size;
+      const pool = [];
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          if (state.grid[r][c].blocker !== 1 && state.grid[r][c].tokenIdx >= 0) {
+            pool.push(state.grid[r][c].tokenIdx);
+          }
+        }
+      }
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      let idx = 0;
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          if (state.grid[r][c].blocker !== 1 && state.grid[r][c].tokenIdx >= 0) {
+            state.grid[r][c].tokenIdx = pool[idx++];
+          }
+        }
+      }
+    }
+
+    function spawnParticles(x, y, color, count = 10) {
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1.5 + Math.random() * 4;
+        state.particles.push({
+          x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          r: 2 + Math.random() * 3.5,
+          color,
+          alpha: 1
+        });
+      }
+    }
+
+    function spawnFloatingText(x, y, text, color = '#fde047') {
+      state.floatingTexts.push({ x, y, text, color, alpha: 1, vy: -1.1 });
+    }
+
+    function handleCellClick(r, c) {
+      if (state.paused || state.animating || state.movesLeft <= 0) return;
+      const size = state.cfg.size;
+      if (r < 0 || r >= size || c < 0 || c >= size) return;
+
+      const clicked = state.grid[r][c];
+      if (!clicked || clicked.blocker === 1 || clicked.tokenIdx < 0) {
+        AudioFX.error();
+        return;
+      }
+
+      let toClear = [];
+      let createPower = null;
+
+      if (clicked.power) {
+        // Trigger power-up blast!
+        AudioFX.blast();
+        if (clicked.power === 'row') {
+          for (let cc = 0; cc < size; cc++) toClear.push([r, cc]);
+        } else if (clicked.power === 'col') {
+          for (let rr = 0; rr < size; rr++) toClear.push([rr, c]);
+        } else if (clicked.power === 'bomb') {
+          for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+              const nr = r + dr, nc = c + dc;
+              if (nr >= 0 && nr < size && nc >= 0 && nc < size) toClear.push([nr, nc]);
+            }
+          }
+        }
+      } else {
+        const group = getConnectedGroup(r, c);
+        if (group.length < state.cfg.minGroup) {
+          AudioFX.error();
+          showToast(`Necesitas al menos ${state.cfg.minGroup} fichas iguales juntas`);
+          return;
+        }
+        toClear = group;
+        if (group.length >= 6) createPower = 'bomb';
+        else if (group.length >= 4) createPower = (Math.random() < 0.5 ? 'row' : 'col');
+        AudioFX.pop(group.length);
+      }
+
+      state.movesLeft--;
+      state.hintGroup = [];
+
+      // Damage adjacent vaults (blocker === 1)
+      const damagedVaults = new Set();
+      toClear.forEach(([cr, cc]) => {
+        [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr, dc]) => {
+          const nr = cr + dr, nc = cc + dc;
+          if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+            if (state.grid[nr][nc].blocker === 1) damagedVaults.add(`${nr},${nc}`);
+          }
+        });
+      });
+
+      // Clear cells & tally objectives
+      let gained = 0;
+      let demandDelta = 0;
+      toClear.forEach(([cr, cc]) => {
+        const cell = state.grid[cr][cc];
+        if (!cell) return;
+        const cx = boardPadding + (cc + 0.5) * cellSize;
+        const cy = boardPadding + (cr + 0.5) * cellSize;
+
+        if (cell.blocker === 1) {
+          // Powerup hit a vault directly
+          cell.blocker = 0;
+          cell.tokenIdx = -2;
+          incrementObjective('vault');
+          spawnParticles(cx, cy, '#38bdf8', 12);
+          gained += 40;
+          return;
+        }
+
+        if (cell.blocker === 2) {
+          // Break frozen shield first
+          cell.blocker = 0;
+          spawnParticles(cx, cy, '#bae6fd', 8);
+          gained += 20;
+          return;
+        }
+
+        if (cell.tokenIdx >= 0) {
+          const tok = TOKENS[cell.tokenIdx];
+          incrementObjective(tok.id);
+          spawnParticles(cx, cy, tok.color, 8);
+          gained += 15;
+          if (tok.id === 'dem' || tok.id === 'etf' || tok.id === 'btc') demandDelta += 1;
+          if (tok.id === 'fud') demandDelta -= 1;
+        }
+        cell.tokenIdx = -2; // empty
+        cell.power = null;
+      });
+
+      // Break adjacent vaults
+      damagedVaults.forEach(key => {
+        const [vr, vc] = key.split(',').map(Number);
+        if (state.grid[vr][vc].blocker === 1) {
+          state.grid[vr][vc].blocker = 0;
+          state.grid[vr][vc].tokenIdx = -2;
+          incrementObjective('vault');
+          const cx = boardPadding + (vc + 0.5) * cellSize;
+          const cy = boardPadding + (vr + 0.5) * cellSize;
+          spawnParticles(cx, cy, '#38bdf8', 14);
+          gained += 45;
+        }
+      });
+
+      // Place Halving Power-Up if earned
+      if (createPower) {
+        state.grid[r][c] = {
+          tokenIdx: clicked.tokenIdx,
+          power: createPower,
+          blocker: 0
+        };
+        const cx = boardPadding + (c + 0.5) * cellSize;
+        const cy = boardPadding + (r + 0.5) * cellSize;
+        spawnFloatingText(cx, cy, '⚡ HALVING!', '#38bdf8');
+      }
+
+      const bonusCombo = toClear.length >= 5 ? toClear.length * 10 : 0;
+      const totalGain = gained + bonusCombo;
+      state.score += totalGain;
+
+      // Update simulated market
+      state.simPrice = Math.max(42000, Math.min(138000, state.simPrice + demandDelta * 650));
+      state.simFng = Math.max(5, Math.min(95, state.simFng + demandDelta * 3));
+
+      const fx = boardPadding + (c + 0.5) * cellSize;
+      const fy = boardPadding + (r + 0.5) * cellSize;
+      spawnFloatingText(fx, fy, `+${totalGain}`, '#fde047');
+
+      applyGravityAndRefill();
+      ensurePlayableMoves(false);
+      updateUI();
+      checkEndState();
+    }
+
+    function incrementObjective(id) {
+      state.cfg.objectives.forEach(obj => {
+        if (obj.id === id && obj.current < obj.target) obj.current++;
+      });
+    }
+
+    function applyGravityAndRefill() {
+      const size = state.cfg.size;
+      const numColors = state.cfg.numColors;
+      for (let c = 0; c < size; c++) {
+        let writeR = size - 1;
+        for (let r = size - 1; r >= 0; r--) {
+          if (state.grid[r][c].blocker === 1) {
+            writeR = r - 1;
+            continue;
+          }
+          if (state.grid[r][c].tokenIdx >= 0) {
+            if (writeR !== r) {
+              state.grid[writeR][c] = state.grid[r][c];
+              state.grid[r][c] = { tokenIdx: -2, power: null, blocker: 0 };
+            }
+            writeR--;
+          }
+        }
+        for (let r = writeR; r >= 0; r--) {
+          if (state.grid[r][c].blocker === 1) continue;
+          if (state.grid[r][c].tokenIdx === -2) {
+            state.grid[r][c] = {
+              tokenIdx: Math.floor(Math.random() * numColors),
+              power: null,
+              blocker: 0
+            };
+          }
+        }
+      }
+    }
+
+    function checkEndState() {
+      const allDone = state.cfg.objectives.every(o => o.current >= o.target);
+      if (allDone) {
+        state.paused = true;
+        setTimeout(() => openQuizModal('win'), 350);
+      } else if (state.movesLeft <= 0) {
+        state.paused = true;
+        AudioFX.lose();
+        setTimeout(() => {
+          document.getElementById('loseModal').classList.remove('hidden');
+          document.getElementById('loseModal').classList.add('flex');
+        }, 350);
+      }
+    }
+
+    // =========================================================================
+    // 7. CANVAS RENDERING LOOP
+    // =========================================================================
+    function drawBoard() {
+      if (!state.cfg) return;
+      const size = state.cfg.size;
+      const dpr = window.devicePixelRatio || 1;
+      const width = canvas.width / dpr;
+      const height = canvas.height / dpr;
+
+      ctx.clearRect(0, 0, width, height);
+
+      // Subtle board backdrop
+      ctx.fillStyle = '#090f24';
+      ctx.beginPath();
+      ctx.roundRect(0, 0, width, height, 14);
+      ctx.fill();
+
+      const hoverSet = new Set(state.hoverGroup.map(([r, c]) => `${r},${c}`));
+      const hintSet = new Set(state.hintGroup.map(([r, c]) => `${r},${c}`));
+
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          const x = boardPadding + c * cellSize;
+          const y = boardPadding + r * cellSize;
+          const cell = state.grid[r][c];
+          const key = `${r},${c}`;
+          const isHover = hoverSet.has(key);
+          const isHint = hintSet.has(key);
+
+          // Cell slot
+          ctx.fillStyle = isHover ? 'rgba(56, 189, 248, 0.18)' : (isHint ? 'rgba(250, 204, 21, 0.2)' : 'rgba(30, 41, 59, 0.45)');
+          ctx.beginPath();
+          ctx.roundRect(x + 2, y + 2, cellSize - 4, cellSize - 4, 8);
+          ctx.fill();
+
+          if (isHint) {
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+
+          if (cell.blocker === 1) {
+            // Solid Exchange Vault
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.roundRect(x + 4, y + 4, cellSize - 8, cellSize - 8, 8);
+            ctx.fill();
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 1.8;
+            ctx.stroke();
+            ctx.fillStyle = '#bae6fd';
+            ctx.font = `bold ${Math.floor(cellSize * 0.42)}px Inter, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🔒', x + cellSize / 2, y + cellSize / 2 + 1);
+            continue;
+          }
+
+          if (cell.tokenIdx >= 0) {
+            const tok = TOKENS[cell.tokenIdx];
+            const cx = x + cellSize / 2;
+            const cy = y + cellSize / 2;
+            const rad = (cellSize - 10) / 2;
+
+            // Token coin body
+            const grad = ctx.createRadialGradient(cx - rad * 0.3, cy - rad * 0.3, rad * 0.1, cx, cy, rad);
+            grad.addColorStop(0, tok.color);
+            grad.addColorStop(1, tok.dark);
+
+            ctx.save();
+            if (isHover || cell.power) {
+              ctx.shadowColor = cell.power ? '#38bdf8' : tok.glow;
+              ctx.shadowBlur = cell.power ? 14 : 10;
+            }
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // Inner ring
+            ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(cx, cy, rad - 2.5, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Symbol
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `800 ${Math.floor(cellSize * 0.36)}px Inter, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(tok.symbol, cx, cy + 1);
+
+            // Power-up badge
+            if (cell.power) {
+              ctx.fillStyle = '#0ea5e9';
+              ctx.beginPath();
+              ctx.arc(x + cellSize - 10, y + 10, 8, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#fff';
+              ctx.font = 'bold 10px Inter, sans-serif';
+              const pSym = cell.power === 'row' ? '↔' : (cell.power === 'col' ? '↕' : '💥');
+              ctx.fillText(pSym, x + cellSize - 10, y + 10.5);
+            }
+
+            // Frozen shield overlay
+            if (cell.blocker === 2) {
+              ctx.strokeStyle = '#7dd3fc';
+              ctx.lineWidth = 2.5;
+              ctx.beginPath();
+              ctx.roundRect(x + 4, y + 4, cellSize - 8, cellSize - 8, 8);
+              ctx.stroke();
+            }
+          }
+        }
+      }
+
+      // Particles
+      for (let i = state.particles.length - 1; i >= 0; i--) {
+        const p = state.particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha -= 0.035;
+        if (p.alpha <= 0) {
+          state.particles.splice(i, 1);
+          continue;
+        }
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // Floating texts
+      for (let i = state.floatingTexts.length - 1; i >= 0; i--) {
+        const ft = state.floatingTexts[i];
+        ft.y += ft.vy;
+        ft.alpha -= 0.025;
+        if (ft.alpha <= 0) {
+          state.floatingTexts.splice(i, 1);
+          continue;
+        }
+        ctx.globalAlpha = ft.alpha;
+        ctx.fillStyle = ft.color;
+        ctx.font = '900 14px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(ft.text, ft.x, ft.y);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function animLoop() {
+      if (state.particles.length > 0 || state.floatingTexts.length > 0) {
+        drawBoard();
+      }
+      requestAnimationFrame(animLoop);
+    }
+
+    // Canvas pointer events
+    function getCellFromEvent(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const x = clientX - rect.left - boardPadding;
+      const y = clientY - rect.top - boardPadding;
+      return [Math.floor(y / cellSize), Math.floor(x / cellSize)];
+    }
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!state.cfg || state.paused) return;
+      const [r, c] = getCellFromEvent(e);
+      const cell = state.grid[r]?.[c];
+      if (cell && cell.tokenIdx >= 0 && cell.blocker !== 1) {
+        if (cell.power) {
+          state.hoverGroup = [[r, c]];
+        } else {
+          const g = getConnectedGroup(r, c);
+          state.hoverGroup = g.length >= state.cfg.minGroup ? g : [];
+        }
+      } else {
+        state.hoverGroup = [];
+      }
+      drawBoard();
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      state.hoverGroup = [];
+      drawBoard();
+    });
+
+    canvas.addEventListener('click', (e) => {
+      AudioFX.init();
+      const [r, c] = getCellFromEvent(e);
+      handleCellClick(r, c);
+      drawBoard();
+    });
+
+    // =========================================================================
+    // 8. UI UPDATES & MODALS
+    // =========================================================================
+    function updateUI() {
+      const cfg = state.cfg;
+      const world = WORLDS[cfg.worldIdx];
+      document.getElementById('worldLabel').textContent = world.name;
+      document.getElementById('levelBadge').textContent = `Nivel ${cfg.level}`;
+      document.getElementById('levelSubtitle').textContent = cfg.subtitle;
+
+      const diffEl = document.getElementById('difficultyBadge');
+      diffEl.textContent = cfg.difficulty;
+      diffEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ' + (
+        cfg.difficulty === 'Jefe'
+          ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+          : cfg.difficulty === 'Difícil'
+            ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+            : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+      );
+
+      document.getElementById('movesDisplay').textContent = state.movesLeft;
+      document.getElementById('scoreDisplay').textContent = state.score;
+      document.getElementById('minGroupBadge').textContent = `Mín. ${cfg.minGroup} iguales`;
+      document.getElementById('ruleHint').textContent = `Toca grupos de ${cfg.minGroup}+ fichas iguales. ¡4+ crea un Rayo Halving!`;
+
+      // Objectives
+      const objContainer = document.getElementById('objectivesList');
+      objContainer.innerHTML = '';
+      cfg.objectives.forEach(o => {
+        const done = o.current >= o.target;
+        const tok = o.kind === 'vault'
+          ? { name: 'Bóvedas 🔒', color: '#38bdf8', symbol: '🔒' }
+          : TOKENS.find(t => t.id === o.id);
+        const div = document.createElement('div');
+        div.className = `p-2.5 rounded-xl border flex items-center justify-between ${done ? 'bg-emerald-500/15 border-emerald-500/40' : 'bg-slate-900/80 border-slate-800'}`;
+        div.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white shadow" style="background:${tok.color}">${tok.symbol}</span>
+            <span class="text-xs font-semibold text-slate-200">${tok.name}</span>
+          </div>
+          <span class="text-xs font-black ${done ? 'text-emerald-300' : 'text-white'}">${Math.min(o.current, o.target)}/${o.target}</span>
+        `;
+        objContainer.appendChild(div);
+      });
+
+      // Market Telemetry
+      document.getElementById('simPrice').textContent = `$${state.simPrice.toLocaleString('en-US')}`;
+      const fng = state.simFng;
+      const fngLabel = fng <= 24 ? 'Miedo Extremo' : (fng >= 75 ? 'Codicia Extrema' : 'Neutral');
+      document.getElementById('simFng').textContent = `${fng} · ${fngLabel}`;
+      document.getElementById('fngBar').style.width = `${fng}%`;
+      const mTag = document.getElementById('marketStateTag');
+      mTag.textContent = fng <= 24 ? 'Excedente / Pánico' : (fng >= 75 ? 'Escasez / FOMO' : 'Equilibrio');
+
+      // Capsule
+      document.getElementById('capsuleModule').textContent = `Módulo ${cfg.worldIdx + 1}`;
+      document.getElementById('capsuleText').textContent = cfg.capsule;
+
+      // Total stars
+      const totalStars = Object.values(saveState.stars).reduce((a, b) => a + b, 0);
+      document.getElementById('totalStarsLabel').textContent = totalStars;
+
+      // Bonus button state
+      const btnBonus = document.getElementById('btnBonusQuiz');
+      btnBonus.disabled = state.bonusUsed;
+      btnBonus.classList.toggle('opacity-40', state.bonusUsed);
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.remove('opacity-0');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.add('opacity-0'), 2200);
+    }
+
+    // Quiz Modal
+    let quizMode = 'win'; // 'win' | 'bonus'
+    function openQuizModal(mode) {
+      quizMode = mode;
+      state.paused = true;
+      const modal = document.getElementById('quizModal');
+      const ch = state.cfg.challenge;
+
+      document.getElementById('quizBadge').textContent = mode === 'win'
+        ? '🏆 ¡Tablero Completado! Valida para ganar'
+        : '⚡ Reto Bonus (+3 Movimientos)';
+      document.getElementById('quizLevelTag').textContent = `Nivel ${state.cfg.level} / 400`;
+      document.getElementById('quizQuestion').textContent = ch.q;
+
+      const optsEl = document.getElementById('quizOptions');
+      optsEl.innerHTML = '';
+      const fbEl = document.getElementById('quizFeedback');
+      fbEl.classList.add('hidden');
+      document.getElementById('quizActions').classList.add('hidden');
+
+      ch.opts.forEach((optText, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full text-left px-3.5 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-xs sm:text-sm font-medium text-slate-100 transition';
+        btn.textContent = optText;
+        btn.addEventListener('click', () => handleQuizAnswer(idx, btn));
+        optsEl.appendChild(btn);
+      });
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function handleQuizAnswer(idx, clickedBtn) {
+      const ch = state.cfg.challenge;
+      const buttons = document.querySelectorAll('#quizOptions button');
+      buttons.forEach((b, i) => {
+        b.disabled = true;
+        if (i === ch.a) {
+          b.className = 'w-full text-left px-3.5 py-2.5 rounded-xl bg-emerald-500/20 border border-emerald-400 text-xs sm:text-sm font-bold text-emerald-200';
+        } else if (i === idx && idx !== ch.a) {
+          b.className = 'w-full text-left px-3.5 py-2.5 rounded-xl bg-rose-500/20 border border-rose-400 text-xs sm:text-sm font-bold text-rose-200';
+        }
+      });
+
+      const isRight = idx === ch.a;
+      const fbEl = document.getElementById('quizFeedback');
+      fbEl.classList.remove('hidden');
+      fbEl.className = `mt-4 p-3 rounded-xl text-xs sm:text-sm leading-relaxed border ${isRight ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-100' : 'bg-amber-500/15 border-amber-500/40 text-amber-100'}`;
+      fbEl.innerHTML = `<strong>${isRight ? '✅ ¡Correcto!' : '📘 Aprendizaje:'}</strong> ${ch.exp}`;
+
+      if (isRight) AudioFX.win();
+      else AudioFX.error();
+
+      if (quizMode === 'win') {
+        const starsEarned = isRight ? (state.movesLeft >= 4 ? 3 : 2) : 1;
+        const prev = saveState.stars[state.cfg.level] || 0;
+        if (starsEarned > prev) {
+          saveState.stars[state.cfg.level] = starsEarned;
+          persistSave();
+        }
+        document.getElementById('btnQuizContinue').textContent = state.cfg.level < 400
+          ? `Siguiente Nivel (${state.cfg.level + 1}) ▶`
+          : '🏆 ¡Completaste los 400 Niveles!';
+      } else {
+        if (isRight) {
+          state.movesLeft += 3;
+          state.bonusUsed = true;
+        } else {
+          state.bonusUsed = true;
+        }
+        document.getElementById('btnQuizContinue').textContent = isRight ? 'Volver con +3 Movimientos ▶' : 'Volver al Tablero ▶';
+      }
+      document.getElementById('quizActions').classList.remove('hidden');
+      document.getElementById('quizActions').classList.add('flex');
+    }
+
+    document.getElementById('btnQuizContinue').addEventListener('click', () => {
+      document.getElementById('quizModal').classList.add('hidden');
+      document.getElementById('quizModal').classList.remove('flex');
+      state.paused = false;
+      if (quizMode === 'win') {
+        const next = state.cfg.level < 400 ? state.cfg.level + 1 : 1;
+        initLevel(next);
+      } else {
+        updateUI();
+      }
+    });
+
+    // =========================================================================
+    // 9. 400-LEVEL SELECTOR MAP
+    // =========================================================================
+    let selectedWorldTab = 0;
+    function renderMapModal() {
+      const tabsEl = document.getElementById('worldTabs');
+      tabsEl.innerHTML = '';
+      WORLDS.forEach((w, idx) => {
+        const btn = document.createElement('button');
+        const active = idx === selectedWorldTab;
+        btn.className = `px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition border ${active ? 'bg-cyan-500 text-slate-950 border-cyan-400' : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'}`;
+        btn.textContent = `M${w.id}: ${w.range[0]}–${w.range[1]}`;
+        btn.addEventListener('click', () => {
+          selectedWorldTab = idx;
+          renderMapModal();
+        });
+        tabsEl.appendChild(btn);
+      });
+
+      const gridEl = document.getElementById('levelsGrid');
+      gridEl.innerHTML = '';
+      const [start, end] = WORLDS[selectedWorldTab].range;
+      for (let l = start; l <= end; l++) {
+        const stars = saveState.stars[l] || 0;
+        const isCurrent = l === state.cfg.level;
+        const isBoss = l % 20 === 0;
+        const btn = document.createElement('button');
+        btn.className = `p-2 rounded-xl border text-center transition flex flex-col items-center justify-center ${
+          isCurrent
+            ? 'bg-cyan-500/25 border-cyan-400 text-white pulse-glow'
+            : stars > 0
+              ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-200 hover:bg-emerald-500/25'
+              : isBoss
+                ? 'bg-rose-500/15 border-rose-500/35 text-rose-200 hover:bg-rose-500/25'
+                : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:bg-slate-800'
+        }`;
+        btn.innerHTML = `
+          <span class="text-xs font-black">${isBoss ? '👑 ' : ''}${l}</span>
+          <span class="text-[9px] mt-0.5 ${stars > 0 ? 'text-amber-400' : 'text-slate-600'}">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span>
+        `;
+        btn.addEventListener('click', () => {
+          document.getElementById('mapModal').classList.add('hidden');
+          document.getElementById('mapModal').classList.remove('flex');
+          initLevel(l);
+        });
+        gridEl.appendChild(btn);
+      }
+    }
+
+    // =========================================================================
+    // 10. BUTTON LISTENERS & INIT
+    // =========================================================================
+    document.getElementById('btnPrevLevel').addEventListener('click', () => {
+      if (state.cfg.level > 1) initLevel(state.cfg.level - 1);
+    });
+    document.getElementById('btnNextLevel').addEventListener('click', () => {
+      if (state.cfg.level < 400) initLevel(state.cfg.level + 1);
+    });
+    document.getElementById('btnRestart').addEventListener('click', () => initLevel(state.cfg.level));
+    document.getElementById('btnShuffle').addEventListener('click', () => {
+      if (state.movesLeft <= 1) { showToast('Necesitas más movimientos para mezclar'); return; }
+      shuffleTokens();
+      ensurePlayableMoves(true);
+      drawBoard();
+      showToast('🔀 Tablero mezclado');
+    });
+    document.getElementById('btnHint').addEventListener('click', () => {
+      const groups = findAllValidGroups();
+      if (groups.length > 0) {
+        groups.sort((a, b) => b.length - a.length);
+        state.hintGroup = groups[0];
+        drawBoard();
+        AudioFX.tone(660, 0.08, 'sine', 0.06);
+      }
+    });
+    document.getElementById('btnBonusQuiz').addEventListener('click', () => {
+      if (!state.bonusUsed && !state.paused) openQuizModal('bonus');
+    });
+    document.getElementById('btnSound').addEventListener('click', (e) => {
+      AudioFX.muted = !AudioFX.muted;
+      e.target.textContent = AudioFX.muted ? '🔇' : '🔊';
+    });
+
+    // Map Modal
+    document.getElementById('btnMap').addEventListener('click', () => {
+      selectedWorldTab = state.cfg.worldIdx;
+      renderMapModal();
+      document.getElementById('mapModal').classList.remove('hidden');
+      document.getElementById('mapModal').classList.add('flex');
+    });
+    document.getElementById('btnCloseMap').addEventListener('click', () => {
+      document.getElementById('mapModal').classList.add('hidden');
+      document.getElementById('mapModal').classList.remove('flex');
+    });
+    document.getElementById('btnJumpLevel').addEventListener('click', () => {
+      const val = parseInt(document.getElementById('jumpLevelInput').value, 10);
+      if (val >= 1 && val <= 400) {
+        document.getElementById('mapModal').classList.add('hidden');
+        document.getElementById('mapModal').classList.remove('flex');
+        initLevel(val);
+      } else {
+        showToast('Ingresa un nivel entre 1 y 400');
+      }
+    });
+
+    // Guide Modal
+    document.getElementById('btnGuide').addEventListener('click', () => {
+      document.getElementById('guideModal').classList.remove('hidden');
+      document.getElementById('guideModal').classList.add('flex');
+    });
+    document.getElementById('btnCloseGuide').addEventListener('click', () => {
+      document.getElementById('guideModal').classList.add('hidden');
+      document.getElementById('guideModal').classList.remove('flex');
+    });
+
+    // Lose Modal
+    document.getElementById('btnLoseRetry').addEventListener('click', () => {
+      document.getElementById('loseModal').classList.add('hidden');
+      document.getElementById('loseModal').classList.remove('flex');
+      initLevel(state.cfg.level);
+    });
+    document.getElementById('btnLoseMap').addEventListener('click', () => {
+      document.getElementById('loseModal').classList.add('hidden');
+      document.getElementById('loseModal').classList.remove('flex');
+      selectedWorldTab = state.cfg.worldIdx;
+      renderMapModal();
+      document.getElementById('mapModal').classList.remove('hidden');
+      document.getElementById('mapModal').classList.add('flex');
+    });
+
+    window.addEventListener('resize', resizeCanvas);
+    window.onload = () => {
+      initLevel(saveState.currentLevel || 1);
+      requestAnimationFrame(animLoop);
+    };
+  </script>
+</body>
+</html>
